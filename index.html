@@ -251,6 +251,13 @@
                 <option value="all">📚 Todos los apartados</option>
             </select>
             <br><br>
+            <label>Número de Preguntas:</label>
+            <select id="examQuestionCount" style="margin-bottom: 20px;">
+                <option value="10">10 preguntas</option>
+                <option value="20">20 preguntas</option>
+                <option value="30" selected>30 preguntas (Recomendado)</option>
+                <option value="all">📖 Todas las preguntas</option>
+            </select>
             <button class="action-btn" onclick="startQuiz()">¡Empezar Test!</button>
         </div>
 
@@ -455,6 +462,16 @@
         if (currentQuiz.length === 0) return alert("No hay preguntas aquí.");
 
         currentQuiz.sort(() => Math.random() - 0.5);
+        
+        // Limitar al número de preguntas seleccionadas
+        const questionCountValue = document.getElementById('examQuestionCount').value;
+        if (questionCountValue !== 'all') {
+            const questionCount = parseInt(questionCountValue);
+            if (currentQuiz.length > questionCount) {
+                currentQuiz = currentQuiz.slice(0, questionCount);
+            }
+        }
+        
         currentIndex = 0;
         score = 0;
         isExamInProgress = true; 
