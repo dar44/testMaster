@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TestMaster Pro: Persistente</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --warning: #f59e0b;
+            --border: #cbd5e1;
+            --code-bg: #1e293b;
+            --code-text: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container { width: 100%; max-width: 700px; }
+
+        header { text-align: center; margin-bottom: 2rem; }
+        h1 { margin: 0; color: var(--primary); font-size: 2rem; }
+        p { color: #64748b; margin-top: 5px; }
+
+        /* Navegación */
+        .nav { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .nav-btn {
+            background: white; border: 1px solid var(--border); padding: 10px 25px;
+            border-radius: 20px; cursor: pointer; font-weight: 600; color: #64748b; transition: 0.2s;
+        }
+        .nav-btn.active {
+            background: var(--primary); color: white; border-color: var(--primary);
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);
+        }
+
+        /* Vistas y Cards */
+        .view { display: none; }
+        .view.active { display: block; }
+        
+        .card {
+            background: var(--card); padding: 25px; border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        /* Inputs */
+        label { font-size: 0.85rem; font-weight: bold; color: #64748b; display: block; margin-bottom: 5px; }
+        input, textarea, select {
+            width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border);
+            border-radius: 8px; box-sizing: border-box; font-family: inherit; font-size: 0.95rem;
+        }
+        input:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+
+        .input-group-wrong { border-left: 3px solid var(--danger); padding-left: 10px; margin-bottom: 10px; }
+        .input-group-correct { border-left: 3px solid var(--success); padding-left: 10px; margin-bottom: 10px; }
+
+        /* Botones Acción */
+        button.action-btn {
+            width: 100%; padding: 12px; background: var(--primary); color: white;
+            border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem;
+        }
+        button.action-btn:hover { opacity: 0.9; }
+        button.secondary-btn {
+            background: #64748b; color: white; border:none; padding: 8px 15px; border-radius: 6px; cursor: pointer;
+        }
+
+        /* Estilos JSON Area */
+        details { margin-top: 10px; border: 1px dashed var(--border); padding: 10px; border-radius: 8px; }
+        summary { cursor: pointer; font-weight: bold; color: var(--primary); }
+        .json-area {
+            background: var(--code-bg); color: var(--code-text); font-family: monospace; font-size: 0.85rem;
+            min-height: 150px; white-space: pre; overflow-x: auto;
+        }
+
+        /* Lista Preguntas */
+        .question-item { background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 10px; position: relative; border: 1px solid #e2e8f0; }
+        .tag { background: #e0e7ff; color: #3730a3; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
+        .delete-btn { position: absolute; top: 10px; right: 10px; color: var(--danger); background: none; border: none; cursor: pointer; font-size: 1.1rem; }
+
+        /* Quiz UI */
+        .quiz-header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 20px; font-size: 0.9rem; color: #64748b; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px;
+        }
+        
+        .question-display { font-size: 1.3rem; font-weight: 700; margin-bottom: 25px; text-align: left; line-height: 1.4; }
+        
+        .live-stats {
+            background: #f1f5f9; padding: 5px 12px; border-radius: 20px; font-weight: bold; display: flex; gap: 10px; align-items: center;
+        }
+        .stat-badge {
+            background: #94a3b8; color: white; padding: 2px 8px; border-radius: 6px; font-size: 0.85rem; transition: 0.3s;
+        }
+        .stat-badge.good { background: var(--success); }
+        .stat-badge.bad { background: var(--warning); }
+
+        .options-grid { display: flex; flex-direction: column; gap: 10px; }
+        
+        .option-btn {
+            background: white; border: 2px solid var(--border); padding: 15px; border-radius: 10px;
+            text-align: left; cursor: pointer; font-size: 1rem; transition: 0.2s; color: var(--text);
+            display: flex; align-items: center;
+        }
+        
+        .opt-letter {
+            background: #f1f5f9; color: #64748b; font-weight: bold; padding: 5px 10px; 
+            border-radius: 6px; margin-right: 15px; min-width: 25px; text-align: center;
+        }
+
+        .option-btn:hover { border-color: var(--primary); background: #eef2ff; }
+        .option-btn:hover .opt-letter { background: #e0e7ff; color: var(--primary); }
+        .option-btn.correct { background-color: #dcfce7 !important; border-color: var(--success) !important; color: #14532d; }
+        .option-btn.correct .opt-letter { background-color: #86efac; color: #064e3b; }
+        .option-btn.wrong { background-color: #fee2e2 !important; border-color: var(--danger) !important; opacity: 0.7; }
+        .option-btn.wrong .opt-letter { background-color: #fca5a5; color: #7f1d1d; }
+
+        .next-btn { margin-top: 20px; background: var(--text); color: white; padding: 12px; border-radius: 8px; border: none; width: 100%; cursor: pointer; font-weight: bold; display: none; }
+        
+        .quit-btn { 
+            font-size: 0.8rem; color: var(--danger); background: none; border: 1px solid var(--danger); 
+            padding: 4px 10px; border-radius: 4px; cursor: pointer; margin-left: 10px;
+        }
+        .quit-btn:hover { background: #fee2e2; }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🤖 TestMaster Pro</h1>
+        <p>Tus exámenes no se borran al cambiar de pestaña</p>
+    </header>
+
+    <div class="nav">
+        <button class="nav-btn active" onclick="switchTab('editor')">Crear / Importar</button>
+        <button class="nav-btn" onclick="initExamView()">Hacer Examen</button>
+    </div>
+
+    <div id="editor" class="view active">
+        
+        <div class="card" style="border-left: 4px solid var(--primary);">
+            <details open>
+                <summary>⚙️ Importar / Exportar (JSON)</summary>
+                <p style="font-size:0.85rem; margin-bottom:10px;">Carga preguntas masivamente:</p>
+                <textarea id="jsonBox" class="json-area" placeholder='[
+  {
+    "category": "Historia",
+    "question": "¿En qué año se firmó la Constitución?",
+    "correct": "1978",
+    "wrongs": ["1975", "1980", "1936"]
+  }
+]'></textarea>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button class="secondary-btn" onclick="loadJSON()">📥 Cargar JSON</button>
+                    <button class="secondary-btn" onclick="exportJSON()">📤 Guardar Backup</button>
+                    <button class="secondary-btn" style="background:#e2e8f0; color:#333;" onclick="copyTemplate()">📋 Copiar Ejemplo</button>
+                </div>
+            </details>
+        </div>
+
+        <div class="card">
+            <h3>Añadir Manualmente</h3>
+            <label>Apartado / Tema</label>
+            <input type="text" id="inCategory" list="categoryList" placeholder="Ej: Biología">
+            <datalist id="categoryList"></datalist>
+
+            <label>Pregunta</label>
+            <textarea id="inQuestion" rows="2"></textarea>
+
+            <div class="input-group-correct">
+                <input type="text" id="inCorrect" placeholder="✅ Respuesta Correcta" style="margin-bottom:0;">
+            </div>
+
+            <div class="input-group-wrong">
+                <input type="text" id="inWrong1" placeholder="❌ Opción mala A">
+                <input type="text" id="inWrong2" placeholder="❌ Opción mala B">
+                <input type="text" id="inWrong3" placeholder="❌ Opción mala C (opcional)">
+            </div>
+
+            <button class="action-btn" onclick="saveQuestion()">Guardar Pregunta</button>
+        </div>
+
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3>Banco de Preguntas (<span id="totalCount">0</span>)</h3>
+                <button onclick="clearAll()" style="color:var(--danger); border:none; background:none; cursor:pointer; font-size:0.8rem;">Borrar Todo</button>
+            </div>
+            <div id="questionsContainer"></div>
+        </div>
+    </div>
+
+    <div id="quiz" class="view">
+        <div class="card" id="quizSetup">
+            <h3>Configurar Examen</h3>
+            <label>Selecciona Tema:</label>
+            <select id="examFilter">
+                <option value="all">📚 Todos los apartados</option>
+            </select>
+            <br><br>
+            <button class="action-btn" onclick="startQuiz()">¡Empezar Test!</button>
+        </div>
+
+        <div class="card" id="quizActive" style="display:none;">
+            <div class="quiz-header">
+                <div>
+                    <span class="tag" id="qTag">TEMA</span>
+                    <span style="margin-left:8px;"> <span id="qCurrentIndex">1</span>/<span id="qTotal">10</span></span>
+                    <button class="quit-btn" onclick="quitQuiz()">❌ Salir</button>
+                </div>
+                
+                <div class="live-stats">
+                    <span id="liveScoreBadge" class="stat-badge">---%</span>
+                </div>
+            </div>
+            
+            <div class="question-display" id="qText">...</div>
+            <div class="options-grid" id="optionsBox"></div>
+
+            <button class="next-btn" id="btnNext" onclick="nextQuestion()">Siguiente Pregunta ➡</button>
+        </div>
+
+        <div id="quizResult" class="card" style="display:none; text-align:center;">
+            <h2>🎉 ¡Test Finalizado!</h2>
+            <div style="margin: 30px 0;">
+                <p style="color:#64748b; margin-bottom:5px;">Resultado Final</p>
+                <p style="font-size:3rem; font-weight:bold; color:var(--primary); margin:0;" id="finalScoreVal">0%</p>
+                <p id="finalScoreText">0 de 0 aciertos</p>
+            </div>
+            <button class="action-btn" onclick="quitQuiz()">Volver al Menú</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- DATOS ---
+    let db = JSON.parse(localStorage.getItem('testDB_v5')) || [];
+    
+    // Variables de estado del examen
+    let currentQuiz = [];
+    let currentIndex = 0;
+    let score = 0;
+    let canClick = true;
+    let isExamInProgress = false; // ¡NUEVO! Controla si hay un examen a medias
+
+    function saveDB() {
+        localStorage.setItem('testDB_v5', JSON.stringify(db));
+    }
+
+    // --- IMPORTAR / EXPORTAR ---
+    function loadJSON() {
+        const input = document.getElementById('jsonBox').value;
+        if(!input.trim()) return alert("El cuadro está vacío.");
+        try {
+            const data = JSON.parse(input);
+            if (!Array.isArray(data)) throw new Error("Debe ser una lista [...]");
+            let addedCount = 0;
+            data.forEach(item => {
+                if(item.question && item.correct && item.wrongs) {
+                    db.push({
+                        id: Date.now() + Math.random(),
+                        category: item.category || "General",
+                        question: item.question,
+                        correct: item.correct,
+                        wrongs: item.wrongs
+                    });
+                    addedCount++;
+                }
+            });
+            saveDB();
+            renderList();
+            updateDataLists();
+            alert(`✅ ¡${addedCount} preguntas añadidas!`);
+            document.getElementById('jsonBox').value = "";
+        } catch (e) {
+            alert("❌ Error JSON: " + e.message);
+        }
+    }
+
+    function exportJSON() {
+        const cleanData = db.map(({id, ...rest}) => rest);
+        document.getElementById('jsonBox').value = JSON.stringify(cleanData, null, 2);
+    }
+
+    function copyTemplate() {
+        document.getElementById('jsonBox').value = `[
+  {
+    "category": "Cultura",
+    "question": "¿Quién pintó la Mona Lisa?",
+    "correct": "Da Vinci",
+    "wrongs": ["Picasso", "Van Gogh", "Dalí"]
+  }
+]`;
+    }
+
+    // --- GESTIÓN PREGUNTAS ---
+    function saveQuestion() {
+        const cat = document.getElementById('inCategory').value.trim();
+        const q = document.getElementById('inQuestion').value.trim();
+        const correct = document.getElementById('inCorrect').value.trim();
+        const w1 = document.getElementById('inWrong1').value.trim();
+        const w2 = document.getElementById('inWrong2').value.trim();
+        const w3 = document.getElementById('inWrong3').value.trim();
+
+        if(!cat || !q || !correct || !w1) return alert("Faltan datos básicos.");
+
+        db.push({
+            id: Date.now(),
+            category: cat,
+            question: q,
+            correct: correct,
+            wrongs: [w1, w2, w3].filter(w => w !== "")
+        });
+        saveDB();
+        
+        document.getElementById('inQuestion').value = '';
+        document.getElementById('inCorrect').value = '';
+        document.getElementById('inWrong1').value = '';
+        document.getElementById('inWrong2').value = '';
+        document.getElementById('inWrong3').value = '';
+        renderList();
+        updateDataLists();
+    }
+
+    function renderList() {
+        const container = document.getElementById('questionsContainer');
+        document.getElementById('totalCount').innerText = db.length;
+        container.innerHTML = '';
+        if(db.length === 0) container.innerHTML = '<p style="text-align:center;color:#999">Vacío</p>';
+        db.slice().reverse().forEach((item) => {
+            const div = document.createElement('div');
+            div.className = 'question-item';
+            div.innerHTML = `
+                <span class="tag">${item.category}</span>
+                <button class="delete-btn" onclick="deleteQ(${item.id})">×</button>
+                <div style="font-weight:600; margin-top:5px;">${item.question}</div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function deleteQ(id) {
+        if(confirm("¿Borrar?")) {
+            db = db.filter(q => q.id !== id);
+            saveDB();
+            renderList();
+            updateDataLists();
+        }
+    }
+    
+    function clearAll() {
+        if(confirm("¿Seguro de BORRAR TODO?")) {
+            db = [];
+            saveDB();
+            renderList();
+            updateDataLists();
+        }
+    }
+
+    function updateDataLists() {
+        const categories = [...new Set(db.map(item => item.category))];
+        const dl = document.getElementById('categoryList');
+        const selectFilter = document.getElementById('examFilter');
+        dl.innerHTML = '';
+        
+        // Mantener selección si es posible
+        const prevSelect = selectFilter.value; 
+        
+        selectFilter.innerHTML = '<option value="all">📚 Todos los apartados</option>';
+        categories.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c;
+            dl.appendChild(opt);
+            const opt2 = document.createElement('option');
+            opt2.value = c;
+            opt2.innerText = c;
+            selectFilter.appendChild(opt2);
+        });
+
+        if(categories.includes(prevSelect)) selectFilter.value = prevSelect;
+    }
+
+    // --- MODO EXAMEN CON PERSISTENCIA ---
+    function initExamView() {
+        switchTab('quiz');
+        
+        // LÓGICA CLAVE: Si ya hay un examen en curso, mostramos el examen, no el menú
+        if (isExamInProgress) {
+            document.getElementById('quizSetup').style.display = 'none';
+            document.getElementById('quizActive').style.display = 'block';
+            document.getElementById('quizResult').style.display = 'none';
+        } else {
+            document.getElementById('quizSetup').style.display = 'block';
+            document.getElementById('quizActive').style.display = 'none';
+            document.getElementById('quizResult').style.display = 'none';
+            updateDataLists();
+        }
+    }
+
+    function startQuiz() {
+        const catFilter = document.getElementById('examFilter').value;
+        if (catFilter === 'all') currentQuiz = [...db];
+        else currentQuiz = db.filter(q => q.category === catFilter);
+
+        if (currentQuiz.length === 0) return alert("No hay preguntas aquí.");
+
+        currentQuiz.sort(() => Math.random() - 0.5);
+        currentIndex = 0;
+        score = 0;
+        isExamInProgress = true; // MARCADO COMO ACTIVO
+        
+        const badge = document.getElementById('liveScoreBadge');
+        badge.innerText = '---%';
+        badge.className = 'stat-badge'; 
+
+        document.getElementById('quizSetup').style.display = 'none';
+        document.getElementById('quizActive').style.display = 'block';
+        loadQuestion();
+    }
+
+    function quitQuiz() {
+        if(confirm("¿Salir del examen? Perderás el progreso de esta sesión.")) {
+            isExamInProgress = false;
+            initExamView();
+        }
+    }
+
+    function loadQuestion() {
+        if (currentIndex >= currentQuiz.length) {
+            showResult();
+            return;
+        }
+
+        const q = currentQuiz[currentIndex];
+        document.getElementById('qTag').innerText = q.category;
+        document.getElementById('qCurrentIndex').innerText = currentIndex + 1;
+        document.getElementById('qTotal').innerText = currentQuiz.length;
+        document.getElementById('qText').innerText = q.question;
+        document.getElementById('btnNext').style.display = 'none';
+        canClick = true;
+
+        let options = [{text: q.correct, isCorrect: true}];
+        q.wrongs.forEach(w => options.push({text: w, isCorrect: false}));
+
+        for (let i = options.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [options[i], options[j]] = [options[j], options[i]];
+        }
+
+        const box = document.getElementById('optionsBox');
+        box.innerHTML = '';
+        const letters = ['A', 'B', 'C', 'D', 'E'];
+
+        options.forEach((opt, idx) => {
+            const btn = document.createElement('div');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span class="opt-letter">${letters[idx]}</span> <span>${opt.text}</span>`;
+            
+            // Si ya fue respondida en esta sesión (para recargas complejas futuras), aquí iría lógica extra.
+            // Por ahora es persistencia de navegación simple.
+            
+            btn.onclick = () => checkAnswer(btn, opt.isCorrect);
+            box.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(clickedBtn, isCorrect) {
+        if (!canClick) return;
+        canClick = false;
+
+        const allBtns = document.querySelectorAll('.option-btn');
+        
+        if (isCorrect) {
+            clickedBtn.classList.add('correct');
+            score++;
+        } else {
+            clickedBtn.classList.add('wrong');
+            allBtns.forEach(b => {
+                if (b.innerText.includes(currentQuiz[currentIndex].correct)) {
+                    b.classList.add('correct');
+                }
+            });
+        }
+
+        const questionsSoFar = currentIndex + 1;
+        const currentPercent = Math.round((score / questionsSoFar) * 100);
+        const badge = document.getElementById('liveScoreBadge');
+        badge.innerText = currentPercent + '%';
+        badge.classList.remove('good', 'bad');
+        if (currentPercent >= 50) badge.classList.add('good');
+        else badge.classList.add('bad');
+
+        document.getElementById('btnNext').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        currentIndex++;
+        loadQuestion();
+    }
+
+    function showResult() {
+        isExamInProgress = false; // FIN DEL EXAMEN
+        document.getElementById('quizActive').style.display = 'none';
+        document.getElementById('quizResult').style.display = 'block';
+        
+        const percentage = Math.round((score / currentQuiz.length) * 100);
+        document.getElementById('finalScoreVal').innerText = `${percentage}%`;
+        document.getElementById('finalScoreText').innerText = `${score} aciertos de ${currentQuiz.length} preguntas`;
+        
+        const finalTitle = document.getElementById('finalScoreVal');
+        if(percentage >= 50) finalTitle.style.color = 'var(--success)';
+        else finalTitle.style.color = 'var(--danger)';
+    }
+
+    function switchTab(tab) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tab).classList.add('active');
+        const btnIndex = tab === 'editor' ? 0 : 1;
+        document.querySelectorAll('.nav-btn')[btnIndex].classList.add('active');
+        if(tab === 'editor') renderList();
+    }
+
+    // Init
+    renderList();
+    updateDataLists();
+</script>
+
+</body>
+</html>
