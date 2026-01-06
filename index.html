@@ -175,6 +175,7 @@
                         <li>Copia el código que te responda la IA.</li>
                         <li>Pégalo en la caja negra de abajo y dale a <strong>"Cargar JSON"</strong>.</li>
                     </ol>
+                                        <p style="font-size:0.9rem; margin-top:10px;"><strong>Backup:</strong> Guarda tus preguntas en JSON con "Guardar Backup". Si las necesitas en otro dispositivo, copia ese JSON, abre la app allí, pégalo en la caja y pulsa "Cargar JSON".</p>
                     
                     <div class="ai-prompt-box" id="promptText">Genera 10 preguntas tipo test sobre [TEMA] en formato JSON estricto (sin texto extra antes ni después) con esta estructura exacta:
 [
@@ -194,7 +195,15 @@
             <details open>
                 <summary>⚙️ Importar / Exportar (JSON)</summary>
                 <p style="font-size:0.85rem; margin-bottom:10px;">Pega aquí el JSON de la IA o exporta tu copia de seguridad:</p>
-                <textarea id="jsonBox" class="json-area" placeholder='[ Pegar aquí el código de ChatGPT ]'></textarea>
+                <textarea id="jsonBox" class="json-area" placeholder='[ Pega aquí las preguntas ]  Recuerda seguir la estructura exacta:
+[
+  {
+    "category": "Nombre del Tema",
+    "question": "¿La pregunta?",
+    "correct": "Respuesta correcta",
+    "wrongs": ["Incorrecta 1", "Incorrecta 2", "Incorrecta 3"]
+  }
+]'></textarea>
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
                     <button class="secondary-btn" onclick="loadJSON()">📥 Cargar JSON</button>
                     <button class="secondary-btn" onclick="exportJSON()">📤 Guardar Backup</button>
