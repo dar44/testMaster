@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TestMaster Pro: Persistente</title>
+    <title>TestMaster Pro: Con Tutorial IA</title>
     <style>
         :root {
             --primary: #4f46e5;
@@ -16,6 +16,7 @@
             --border: #cbd5e1;
             --code-bg: #1e293b;
             --code-text: #e2e8f0;
+            --info: #3b82f6;
         }
 
         body {
@@ -74,6 +75,7 @@
             border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem;
         }
         button.action-btn:hover { opacity: 0.9; }
+        
         button.secondary-btn {
             background: #64748b; color: white; border:none; padding: 8px 15px; border-radius: 6px; cursor: pointer;
         }
@@ -84,6 +86,15 @@
         .json-area {
             background: var(--code-bg); color: var(--code-text); font-family: monospace; font-size: 0.85rem;
             min-height: 150px; white-space: pre; overflow-x: auto;
+        }
+
+        /* Tutorial IA Box */
+        .ai-tutorial {
+            background: #eff6ff; border: 1px solid #bfdbfe; padding: 15px; border-radius: 8px; margin-bottom: 20px;
+        }
+        .ai-prompt-box {
+            background: white; border: 1px solid #bfdbfe; padding: 10px; font-family: monospace; 
+            font-size: 0.85rem; color: #334155; margin: 10px 0; border-radius: 6px; white-space: pre-wrap;
         }
 
         /* Lista Preguntas */
@@ -143,7 +154,7 @@
 <div class="container">
     <header>
         <h1>🤖 TestMaster Pro</h1>
-        <p>Tus exámenes no se borran al cambiar de pestaña</p>
+        <p>Crea tests infinitos con ayuda de la IA</p>
     </header>
 
     <div class="nav">
@@ -153,22 +164,41 @@
 
     <div id="editor" class="view active">
         
+        <div class="card" style="border-left: 4px solid var(--info);">
+            <details>
+                <summary style="color:var(--info)">💡 Tutorial: Crea preguntas rápido con IA</summary>
+                <div class="ai-tutorial">
+                    <p style="margin-top:0; font-size:0.9rem;">No escribas a mano. Pide a <strong>ChatGPT, Gemini o Copilot</strong> que lo haga por ti. Sigue estos pasos:</p>
+                    <ol style="font-size:0.9rem; padding-left:20px;">
+                        <li>Copia el texto de abajo (el Prompt).</li>
+                        <li>Pégalo en tu IA favorita y cambia <strong>[TEMA]</strong> por lo que estudias (ej: "Capitales de Asia", "Anatomía Humana").</li>
+                        <li>Copia el código que te responda la IA.</li>
+                        <li>Pégalo en la caja negra de abajo y dale a <strong>"Cargar JSON"</strong>.</li>
+                    </ol>
+                    
+                    <div class="ai-prompt-box" id="promptText">Genera 10 preguntas tipo test sobre [TEMA] en formato JSON estricto (sin texto extra antes ni después) con esta estructura exacta:
+[
+  {
+    "category": "Nombre del Tema",
+    "question": "¿La pregunta?",
+    "correct": "Respuesta correcta",
+    "wrongs": ["Incorrecta 1", "Incorrecta 2", "Incorrecta 3"]
+  }
+]</div>
+                    <button class="secondary-btn" style="background:var(--info); width:100%;" onclick="copyPrompt()">📋 Copiar Prompt para la IA</button>
+                </div>
+            </details>
+        </div>
+
         <div class="card" style="border-left: 4px solid var(--primary);">
             <details open>
                 <summary>⚙️ Importar / Exportar (JSON)</summary>
-                <p style="font-size:0.85rem; margin-bottom:10px;">Carga preguntas masivamente:</p>
-                <textarea id="jsonBox" class="json-area" placeholder='[
-  {
-    "category": "Historia",
-    "question": "¿En qué año se firmó la Constitución?",
-    "correct": "1978",
-    "wrongs": ["1975", "1980", "1936"]
-  }
-]'></textarea>
+                <p style="font-size:0.85rem; margin-bottom:10px;">Pega aquí el JSON de la IA o exporta tu copia de seguridad:</p>
+                <textarea id="jsonBox" class="json-area" placeholder='[ Pegar aquí el código de ChatGPT ]'></textarea>
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
                     <button class="secondary-btn" onclick="loadJSON()">📥 Cargar JSON</button>
                     <button class="secondary-btn" onclick="exportJSON()">📤 Guardar Backup</button>
-                    <button class="secondary-btn" style="background:#e2e8f0; color:#333;" onclick="copyTemplate()">📋 Copiar Ejemplo</button>
+                    <button class="secondary-btn" style="background:#e2e8f0; color:#333;" onclick="clearJsonBox()">Limpiar Caja</button>
                 </div>
             </details>
         </div>
@@ -248,17 +278,29 @@
 
 <script>
     // --- DATOS ---
-    let db = JSON.parse(localStorage.getItem('testDB_v5')) || [];
+    let db = JSON.parse(localStorage.getItem('testDB_v6')) || [];
     
     // Variables de estado del examen
     let currentQuiz = [];
     let currentIndex = 0;
     let score = 0;
     let canClick = true;
-    let isExamInProgress = false; // ¡NUEVO! Controla si hay un examen a medias
+    let isExamInProgress = false; 
 
     function saveDB() {
-        localStorage.setItem('testDB_v5', JSON.stringify(db));
+        localStorage.setItem('testDB_v6', JSON.stringify(db));
+    }
+
+    // --- TUTORIAL IA ---
+    function copyPrompt() {
+        const text = document.getElementById('promptText').innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            alert("✅ Texto copiado. \nAhora pégalo en ChatGPT/Gemini y pide tu tema.");
+        });
+    }
+
+    function clearJsonBox() {
+        document.getElementById('jsonBox').value = '';
     }
 
     // --- IMPORTAR / EXPORTAR ---
@@ -287,24 +329,13 @@
             alert(`✅ ¡${addedCount} preguntas añadidas!`);
             document.getElementById('jsonBox').value = "";
         } catch (e) {
-            alert("❌ Error JSON: " + e.message);
+            alert("❌ Error JSON: Asegúrate de copiar SOLO el código que te da la IA (desde el corchete [ hasta el cierre ]).");
         }
     }
 
     function exportJSON() {
         const cleanData = db.map(({id, ...rest}) => rest);
         document.getElementById('jsonBox').value = JSON.stringify(cleanData, null, 2);
-    }
-
-    function copyTemplate() {
-        document.getElementById('jsonBox').value = `[
-  {
-    "category": "Cultura",
-    "question": "¿Quién pintó la Mona Lisa?",
-    "correct": "Da Vinci",
-    "wrongs": ["Picasso", "Van Gogh", "Dalí"]
-  }
-]`;
     }
 
     // --- GESTIÓN PREGUNTAS ---
@@ -376,8 +407,6 @@
         const dl = document.getElementById('categoryList');
         const selectFilter = document.getElementById('examFilter');
         dl.innerHTML = '';
-        
-        // Mantener selección si es posible
         const prevSelect = selectFilter.value; 
         
         selectFilter.innerHTML = '<option value="all">📚 Todos los apartados</option>';
@@ -397,8 +426,6 @@
     // --- MODO EXAMEN CON PERSISTENCIA ---
     function initExamView() {
         switchTab('quiz');
-        
-        // LÓGICA CLAVE: Si ya hay un examen en curso, mostramos el examen, no el menú
         if (isExamInProgress) {
             document.getElementById('quizSetup').style.display = 'none';
             document.getElementById('quizActive').style.display = 'block';
@@ -421,7 +448,7 @@
         currentQuiz.sort(() => Math.random() - 0.5);
         currentIndex = 0;
         score = 0;
-        isExamInProgress = true; // MARCADO COMO ACTIVO
+        isExamInProgress = true; 
         
         const badge = document.getElementById('liveScoreBadge');
         badge.innerText = '---%';
@@ -469,10 +496,6 @@
             const btn = document.createElement('div');
             btn.className = 'option-btn';
             btn.innerHTML = `<span class="opt-letter">${letters[idx]}</span> <span>${opt.text}</span>`;
-            
-            // Si ya fue respondida en esta sesión (para recargas complejas futuras), aquí iría lógica extra.
-            // Por ahora es persistencia de navegación simple.
-            
             btn.onclick = () => checkAnswer(btn, opt.isCorrect);
             box.appendChild(btn);
         });
@@ -513,7 +536,7 @@
     }
 
     function showResult() {
-        isExamInProgress = false; // FIN DEL EXAMEN
+        isExamInProgress = false; 
         document.getElementById('quizActive').style.display = 'none';
         document.getElementById('quizResult').style.display = 'block';
         
