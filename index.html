@@ -209,6 +209,9 @@
                     <button class="secondary-btn" onclick="exportJSON()">📤 Guardar Backup</button>
                     <button class="secondary-btn" style="background:#e2e8f0; color:#333;" onclick="clearJsonBox()">Limpiar Caja</button>
                 </div>
+                <p style="font-size:0.85rem; margin-top:15px; margin-bottom:10px;"><strong>O sube un archivo .txt con el formato explicado arriba:</strong></p>
+                <input type="file" id="fileUpload" accept=".txt,.json" style="margin-bottom:10px;">
+                <button class="secondary-btn" style="background:var(--info); width:100%;" onclick="loadFromFile()">📁 Cargar desde Archivo</button>
             </details>
         </div>
 
@@ -352,6 +355,43 @@
     function exportJSON() {
         const cleanData = db.map(({id, ...rest}) => rest);
         document.getElementById('jsonBox').value = JSON.stringify(cleanData, null, 2);
+    }
+
+    function loadFromFile() {
+        const fileInput = document.getElementById('fileUpload');
+        const file = fileInput.files[0];
+        
+        if (!file) return alert("Selecciona un archivo primero.");
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const content = e.target.result;
+                const data = JSON.parse(content);
+                if (!Array.isArray(data)) throw new Error("Debe ser una lista [...]");
+                let addedCount = 0;
+                data.forEach(item => {
+                    if(item.question && item.correct && item.wrongs) {
+                        db.push({
+                            id: Date.now() + Math.random(),
+                            category: item.category || "General",
+                            question: item.question,
+                            correct: item.correct,
+                            wrongs: item.wrongs
+                        });
+                        addedCount++;
+                    }
+                });
+                saveDB();
+                renderList();
+                updateDataLists();
+                alert(`✅ ¡${addedCount} preguntas añadidas desde el archivo!`);
+                fileInput.value = '';
+            } catch (e) {
+                alert("❌ Error al leer el archivo: " + e.message);
+            }
+        };
+        reader.readAsText(file);
     }
 
     // --- GESTIÓN PREGUNTAS ---
